@@ -10,9 +10,12 @@ void createCustomer() {
     customer.set_email("john.doe@example.com");
     customer.set_address("123 Main St, Anytown, USA");
 
-    // Serialize the customer to a string
-    std::string serializedCustomer;
-    if (!customer.SerializeToString(&serializedCustomer)) {
+    // Allocate a buffer for the serialized data
+    int size = customer.ByteSizeLong();
+    std::vector<uint8_t> buffer(size);
+
+    // Serialize the customer to the buffer
+    if (!customer.SerializeToArray(buffer.data(), size)) {
         std::cerr << "Failed to serialize customer." << std::endl;
         return;
     }
@@ -23,7 +26,7 @@ void createCustomer() {
         std::cerr << "Failed to open file for writing." << std::endl;
         return;
     }
-    outputFile << serializedCustomer;
+    outputFile.write(reinterpret_cast<const char*>(buffer.data()), size);
     outputFile.close();
 
     std::cout << "Customer data serialized and written to file." << std::endl;
@@ -37,12 +40,12 @@ void readCustomer() {
         return;
     }
 
-    std::string serializedCustomer((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+    std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
     inputFile.close();
 
-    // Deserialize the string into a Customer object
+    // Deserialize the buffer into a Customer object
     Customer customer;
-    if (!customer.ParseFromString(serializedCustomer)) {
+    if (!customer.ParseFromArray(buffer.data(), buffer.size())) {
         std::cerr << "Failed to deserialize customer." << std::endl;
         return;
     }
