@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include ".customers.pb.h"
+#include "proto/device_irs/.customers.pb.h"
 
 void createCustomer() {
     // Create a new Customer object
