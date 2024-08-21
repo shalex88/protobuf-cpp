@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include "proto/device_irs/.customers.pb.h"
+#include "proto/device_irs/customer.pb.h"
 
 void createCustomer() {
     // Create a new Customer object
-    Customer customer;
+    customer::Customer customer;
     customer.set_id(1);
     customer.set_name("John Doe");
     customer.set_email("john.doe@example.com");
@@ -44,7 +44,7 @@ void readCustomer() {
     inputFile.close();
 
     // Deserialize the buffer into a Customer object
-    Customer customer;
+    customer::Customer customer;
     if (!customer.ParseFromArray(buffer.data(), buffer.size())) {
         std::cerr << "Failed to deserialize customer." << std::endl;
         return;
