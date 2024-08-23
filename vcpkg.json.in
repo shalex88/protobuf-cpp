@@ -1,0 +1,8 @@
+{
+  "name": "protobuf-cpp",
+  "version": "@VERSION@",
+  "dependencies": [
+    "abseil",
+    "protobuf"
+  ]
+}

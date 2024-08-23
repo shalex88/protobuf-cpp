@@ -4,3 +4,6 @@
 
 # Build artifacts
 /*build*/
+
+# Cmake generated files
+vcpkg.json
