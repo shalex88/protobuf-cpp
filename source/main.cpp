@@ -57,7 +57,7 @@ customer::Customer read_customer_from_file(const std::string& filename) {
 }
 
 int main() {
-    std::cout << "protobuf-cpp" << std::endl;
+    std::cout << "protobuf-cpp" << " v" << APP_VERSION_MAJOR << "." << APP_VERSION_MINOR << "." << APP_VERSION_PATCH << APP_VERSION_DIRTY << std::endl;
 
     // Initialize the protobuf library
     GOOGLE_PROTOBUF_VERIFY_VERSION;
