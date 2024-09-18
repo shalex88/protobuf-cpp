@@ -1,10 +1,20 @@
 syntax = "proto3";
 
-package customer;
+package customer; // Namespace
+
+message Header {
+    uint32 id = 1;
+    uint32 timestamp = 2;
+}
+
+message Footer {
+    uint32 checksum = 1;
+}
 
 message Customer {
-    uint32 id = 1;
+    Header header = 1; // Embed common fields
     string name = 2;
     string email = 3;
     string address = 4;
+    Footer footer = 5; // Embed common fields
 }

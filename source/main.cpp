@@ -2,21 +2,38 @@
 #include <fstream>
 #include <vector>
 
+#include <google/protobuf/util/message_differencer.h>
+#include <google/protobuf/util/field_comparator.h>
 #include "proto/device_irs/customer.pb.h"
+
+uint32_t calculateChecksum(const customer::Customer& customer) {
+    std::string data;
+    auto comparator = std::make_unique<google::protobuf::util::DefaultFieldComparator>();
+    google::protobuf::util::MessageDifferencer differencer;
+    differencer.set_field_comparator(comparator.get());
+    differencer.IgnoreField(customer::Customer::GetDescriptor()->FindFieldByName("header"));
+    differencer.IgnoreField(customer::Customer::GetDescriptor()->FindFieldByName("footer"));
+    differencer.ReportDifferencesToString(&data);
+    differencer.Compare(customer, customer);
+
+    return std::accumulate(data.begin(), data.end(), 0u);
+}
 
 customer::Customer createCustomer() {
     customer::Customer customer;
 
-    customer.set_id(1);
+    customer.mutable_header()->set_id(1);
+    customer.mutable_header()->set_timestamp(std::time(nullptr));
     customer.set_name("John Doe");
     customer.set_email("john.doe@example.com");
     customer.set_address("123 Main St, Anytown, USA");
+    customer.mutable_footer()->set_checksum(calculateChecksum(customer));
 
     return customer;
 }
 
 std::vector<uint8_t> serialize_customer(const customer::Customer& customer) {
-    auto size = customer.ByteSizeLong();
+    const auto size = customer.ByteSizeLong();
     std::vector<uint8_t> buffer(size);
 
     if (!customer.SerializeToArray(buffer.data(), size)) {
@@ -77,10 +94,15 @@ int main() {
     const auto deserialized_customer = read_customer_from_file("customer.dat");
 
     // Display the customer's information
-    std::cout << "Customer ID: " << deserialized_customer.id() << std::endl;
+    std::cout << "---Header---" << std::endl;
+    std::cout << "Customer ID: " << deserialized_customer.header().id() << std::endl;
+    std::cout << "Timestamp: " << deserialized_customer.header().timestamp() << std::endl;
+    std::cout << "---Payload---" << std::endl;
     std::cout << "Name: " << deserialized_customer.name() << std::endl;
     std::cout << "Email: " << deserialized_customer.email() << std::endl;
     std::cout << "Address: " << deserialized_customer.address() << std::endl;
+    std::cout << "---Footer---" << std::endl;
+    std::cout << "Checksum: " << deserialized_customer.footer().checksum() << std::endl;
 
     // Shutdown protobuf library
     google::protobuf::ShutdownProtobufLibrary();
