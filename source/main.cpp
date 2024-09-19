@@ -25,7 +25,8 @@ customer::Customer createCustomer() {
     customer.mutable_header()->set_id(1);
     customer.mutable_header()->set_timestamp(std::time(nullptr));
     customer.set_name("John Doe");
-    customer.set_email("john.doe@example.com");
+    customer.set_phone("123456");
+    customer.set_email("john.doe@example.com"); // overrides 'phone' field because of oneof usage in proto file
     customer.set_address("123 Main St, Anytown, USA");
     customer.mutable_footer()->set_checksum(calculateChecksum(customer));
 
@@ -99,7 +100,12 @@ int main() {
     std::cout << "Timestamp: " << deserialized_customer.header().timestamp() << std::endl;
     std::cout << "---Payload---" << std::endl;
     std::cout << "Name: " << deserialized_customer.name() << std::endl;
-    std::cout << "Email: " << deserialized_customer.email() << std::endl;
+    if (deserialized_customer.has_phone()) {
+        std::cout << "Phone: " << deserialized_customer.phone() << std::endl;
+    }
+    if (deserialized_customer.has_email()) {
+        std::cout << "Email: " << deserialized_customer.email() << std::endl;
+    }
     std::cout << "Address: " << deserialized_customer.address() << std::endl;
     std::cout << "---Footer---" << std::endl;
     std::cout << "Checksum: " << deserialized_customer.footer().checksum() << std::endl;
