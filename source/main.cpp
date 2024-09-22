@@ -2,21 +2,28 @@
 #include <fstream>
 #include <vector>
 
-#include <google/protobuf/util/message_differencer.h>
-#include <google/protobuf/util/field_comparator.h>
 #include "proto/device_irs/customer.pb.h"
 
-uint32_t calculateChecksum(const customer::Customer& customer) {
-    std::string data;
-    auto comparator = std::make_unique<google::protobuf::util::DefaultFieldComparator>();
-    google::protobuf::util::MessageDifferencer differencer;
-    differencer.set_field_comparator(comparator.get());
-    differencer.IgnoreField(customer::Customer::GetDescriptor()->FindFieldByName("header"));
-    differencer.IgnoreField(customer::Customer::GetDescriptor()->FindFieldByName("footer"));
-    differencer.ReportDifferencesToString(&data);
-    differencer.Compare(customer, customer);
+std::vector<uint8_t> serialize_customer(const customer::Customer& customer) {
+    const auto size = customer.ByteSizeLong();
+    std::vector<uint8_t> buffer(size);
 
-    return std::accumulate(data.begin(), data.end(), 0u);
+    if (!customer.SerializeToArray(buffer.data(), size)) {
+        std::cerr << "Failed to serialize customer." << std::endl;
+    }
+
+    return buffer;
+}
+
+uint32_t calculateChecksum(const customer::Customer& customer) {
+    auto modified_customer = customer;
+
+    modified_customer.mutable_header()->set_id(0);
+    modified_customer.mutable_header()->set_timestamp(0);
+
+    auto serialized_customer = serialize_customer(modified_customer);
+
+    return std::accumulate(serialized_customer.begin(), serialized_customer.end(), 0u);;
 }
 
 customer::Customer createCustomer() {
@@ -31,16 +38,6 @@ customer::Customer createCustomer() {
     customer.mutable_footer()->set_checksum(calculateChecksum(customer));
 
     return customer;
-}
-
-std::vector<uint8_t> serialize_customer(const customer::Customer& customer) {
-    const auto size = customer.ByteSizeLong();
-    std::vector<uint8_t> buffer(size);
-
-    if (!customer.SerializeToArray(buffer.data(), size)) {
-        std::cerr << "Failed to serialize customer." << std::endl;
-    }
-    return buffer;
 }
 
 bool write_serialized_data_to_file(const std::vector<uint8_t>& data, const std::string& filename) {
